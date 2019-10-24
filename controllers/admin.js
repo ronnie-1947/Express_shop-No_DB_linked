@@ -1,20 +1,55 @@
 const Product = require('../models/products')
 
 exports.getAddProduct = (req, res, next) => {
-    // res.sendFile(path.join(rootDir, 'views', 'add-product.html'));
-    res.render('admin/add-product', { path: '/add-prod', title: 'Add product' });
-  }
-  
+    res.render('admin/edit-product', { path: '/admin/add-product', title: 'Add product', edit: false });
+}
+
 exports.postAddProduct = (req, res, next) => {
-const product = new Product(req.body.title, req.body.imgUrl, req.body.price, req.body.description);
-product.save();
-res.redirect('/');
+    const product = new Product(null, req.body.title, req.body.imageUrl, req.body.price, req.body.description);
+    product.save();
+    res.redirect('/');
 };
+
+exports.getEditProduct = (req, res, next) => {
+    const editMode = req.query.edit;
+    const prodid= req.params.productId;
+    if(!editMode){
+        res.redirect('/')
+    }
+    Product.findById(prodid, (product)=>{
+        if(!product){
+            return res.redirect('/');
+        }
+        res.render('admin/edit-product', {
+            path: '/admin/edit-product', 
+            title: 'Edit product',
+            edit: editMode,
+            product: product
+        });
+    })
+}
+
+exports.postEditProduct = (req, res, next)=>{
+    const prodId = req.body.productId;
+    const updatedtitle = req.body.title;
+    const updatedPrice = req.body.price;
+    const updatedImgUrl = req.body.imageUrl;
+    const updatedDesc = req.body.description;
+
+    const updatedProduct = new Product(prodId, updatedtitle, updatedImgUrl, updatedPrice, updatedDesc);
+    updatedProduct.save();
+    res.redirect('/admin/products');
+}
+
+exports.postDeleteProduct = (req, res, next)=>{
+    const id = req.body.productId;
+    res.redirect('/');
+}
 
 exports.getAdminProducts = (req, res, next)=>{
     Product.fetchAll(products=>{
         res.render('admin/products', {
-            prod: products,
+            prods: products,
             path: '/admin/products',
             title: 'Admin Products'
         });
